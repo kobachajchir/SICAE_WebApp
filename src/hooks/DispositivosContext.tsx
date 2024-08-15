@@ -1,22 +1,33 @@
-import React, { useEffect, useState, useContext, createContext, ReactNode } from "react";
+import React, {
+  useEffect,
+  useState,
+  useContext,
+  createContext,
+  ReactNode,
+} from "react";
 import { ref, onValue, off } from "firebase/database";
 import { database } from "../../firebaseConfig";
-import { Dispositivo, DispositivosContextProps } from "../types/DispositivoTypes";
+import {
+  Dispositivo,
+  DispositivosContextProps,
+} from "../types/DispositivoTypes";
 
-const DispositivosContext = createContext<DispositivosContextProps | undefined>(undefined);
+const DispositivosContext = createContext<DispositivosContextProps | undefined>(
+  undefined
+);
 
-export const DispositivosProvider = ({ children }:{children:ReactNode}) => {
+export const DispositivosProvider = ({ children }: { children: ReactNode }) => {
   const [dispositivos, setDispositivos] = useState<Dispositivo[]>([]);
 
   useEffect(() => {
-    const dispositivosRef = ref(database, 'dispositivos');
+    const dispositivosRef = ref(database, "dispositivos");
 
     const handleValueChange = (snapshot: any) => {
       const data = snapshot.val();
       if (data) {
-        const dispositivosArray = Object.keys(data).map(key => ({
+        const dispositivosArray = Object.keys(data).map((key) => ({
           id: key,
-          ...data[key]
+          ...data[key],
         }));
         setDispositivos(dispositivosArray);
       } else {
@@ -24,10 +35,12 @@ export const DispositivosProvider = ({ children }:{children:ReactNode}) => {
       }
     };
 
+    // Attach the listener
     onValue(dispositivosRef, handleValueChange);
 
+    // Cleanup the listener on unmount
     return () => {
-      off(dispositivosRef, 'value', handleValueChange);
+      off(dispositivosRef, "value", handleValueChange);
     };
   }, []);
 
@@ -37,11 +50,12 @@ export const DispositivosProvider = ({ children }:{children:ReactNode}) => {
     </DispositivosContext.Provider>
   );
 };
-
 export const useDispositivos = () => {
   const context = useContext(DispositivosContext);
   if (!context) {
-    throw new Error("useDispositivos must be used within a DispositivosProvider");
+    throw new Error(
+      "useDispositivos must be used within a DispositivosProvider"
+    );
   }
   return context;
 };

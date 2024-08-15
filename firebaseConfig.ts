@@ -6,7 +6,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAX0p4VIdtfN7I7dnaOGpBtfGAtlG3IqDY",
   databaseURL: "https://sicaewebapp-default-rtdb.firebaseio.com/",
   projectId: "888070643462",
-  appId: "sicaewebapp"
+  appId: "sicaewebapp",
 };
 
 // Initialize Firebase
