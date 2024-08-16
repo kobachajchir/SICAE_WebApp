@@ -22,6 +22,7 @@ export interface DeviceDataEntry {
   model: string;
   name: string;
   status: boolean;
+  id: string;
 }
 
 export interface DispositivoData {

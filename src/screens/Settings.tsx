@@ -5,7 +5,9 @@ import GoToButton from "../components/GoToButton";
 import { BoardInfo, SystemInfo } from "../types/APITypes";
 import { fetchSystemInfo } from "../tools/api";
 import ToggleButton from "../components/toggleButton";
-import { MdCloudDownload, MdDownload, MdHome, MdList } from "react-icons/md";
+import { MdArrowBack, MdArrowCircleDown, MdArrowCircleUp, MdCloudDownload, MdDarkMode, MdDownload, MdHome, MdLightMode, MdList } from "react-icons/md";
+import { useDispositivos } from "../hooks/DispositivosContext";
+import { Dispositivo } from "../types/DispositivoTypes";
 
 
 function Settings() {
@@ -17,6 +19,12 @@ function Settings() {
   >(null);
   const { isDarkMode, selectThemeClass, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const [selectedDispositivo, setSelectedDispositivo] =
+  useState<Dispositivo | null>(null);
+  const { dispositivos, setDispositivos } = useDispositivos();
+  const [openDispositivo, setOpenDispositivo] = useState<false>(false);
+  const [showDispositivos, setShowDispositivos] = useState<boolean>(false);
+
 
   async function getBoardListData() {
     console.log("get data");
@@ -29,6 +37,10 @@ function Settings() {
   function handleGoToHome() {
     navigate("/");
   }
+
+  useEffect(() => {
+    
+  }, [dispositivos]);
 
   return (
     <div
@@ -49,18 +61,20 @@ function Settings() {
           position: "relative",
         }}
       >
-        <GoToButton
-          goToSectionTitle={"Ir a Inicio"}
+          <GoToButton
+          goToSectionTitle={"Ir a inicio"}
           fnGoTo={handleGoToHome}
-          icon={<MdHome
-            fill={selectThemeClass("#000", "#fff")}
-            size={35}
-          ></MdHome>}
-          classnames="ml-2"
-          classnamesContainer={`absolute left-0 ml-4 ${selectThemeClass(
+          icon={
+            <MdArrowBack
+              fill={selectThemeClass("#000", "#fff")}
+              size={30}
+            ></MdArrowBack>
+          }
+          classnames="ml-2 text-2xl"
+          classnamesContainer={`absolute left-5 ml-4 ${selectThemeClass(
             "bg-gray-200 text-black",
             "bg-gray-700 text-white"
-          )} flex-row align-center items-center justify-center`}
+          )} flex-row align-center items-center justify-center p-4 rounded-full`}
         ></GoToButton>
         <span
           className={`${selectThemeClass(
@@ -71,16 +85,27 @@ function Settings() {
           Configuracion
         </span>
         <div className="flex flex-row justify-center items-center h-min absolute right-0 mr-10  ">
-          <ToggleButton
-            onColor="bg-gray-200"
-            offColor="bg-gray-900"
-            filled={true}
-            circleColor={"bg-sky-400"}
-            toggle={isDarkMode}
-            setToggle={toggleTheme}
-            textOn="Oscuro"
-            textOff="Claro"
-          />
+          <button
+          onClick={()=>toggleTheme()}
+          className={`flex justify-between items-center w-full text-left p-4 rounded-full ${selectThemeClass(
+            "bg-gray-200 text-black",
+            "bg-gray-800 text-white"
+          )}`}
+          >
+            {isDarkMode ? (
+            <MdDarkMode
+            size={30}
+            fill={selectThemeClass("#000", "#fff")}
+            ></MdDarkMode>) : (           <MdLightMode
+              size={30}
+              fill={selectThemeClass("#000", "#fff")}
+              ></MdLightMode> )}
+            <span
+              className={`text-2xl font-bold ml-2
+              `}
+            >{isDarkMode ? (
+              "Tema oscuro") : ("Tema claro")}</span>
+            </button>
         </div>
       </div>
       <div
@@ -96,12 +121,12 @@ function Settings() {
           )} items-center justify-center my-4`}
         >
           <button
-            onClick={getBoardListData}
-            className={`flex flex-row items-center justify-center bg-green-400 h-min rounded-xl px-4`}
+            onClick={()=>setShowDispositivos(!showDispositivos)}
+            className={`flex flex-row items-center justify-center bg-green-400 h-min rounded-full p-3 px-6`}
           >
             <MdList
               fill={selectThemeClass("#000", "#fff")}
-              fontSize={45}
+              size={25}
             ></MdList>
             <p
               className={`text-2xl ml-2 ${selectThemeClass(
@@ -109,53 +134,153 @@ function Settings() {
                 "text-white"
               )}`}
             >
-              Listar placas
+              {!showDispositivos ? "Listar placas online" : "Ocultar placas online"}
             </p>
           </button>
         </div>
-        {boardList &&
-          <div className="flex flex-col text-center my-4">
-          <h1 className="text-4xl font-bold">
-            Listado de placas
-          </h1>
-          {boardList && boardList.map((board, index) => {
-            return (
-              <div className="flex flex-row my-3" key={index}>
-                <p className="text-xl">{board.chipId}</p>
-                <button
-                  onClick={()=>getSelectedBoardData(board.chipId)}
-                  className={`flex flex-row items-center justify-center bg-green-400 h-min rounded-xl px-4`}
+        {showDispositivos &&
+        <div
+          className={`flex w-full flex-col h-3/4 justify-center items-center`}
+        >
+          <div
+            className={`flex w-5/6 rounded-2xl flex-col py-4 align-center justify-center items-center ${selectThemeClass(
+              "bg-gray-100",
+              "bg-gray-900"
+            )}`}
+          >
+            {dispositivos.length > 0 &&
+              dispositivos.filter((el)=>el.data.info.status === true).map((dispositivo) => (
+                <div
+                  key={dispositivo.id}
+                  className={`${selectThemeClass(
+                    "bg-gray-200 text-black",
+                    "bg-gray-700 text-white"
+                  )} my-2 rounded-lg p-4 flex flex-col w-3/4`}
                 >
-                  <MdDownload
-                    fill={selectThemeClass("#000", "#fff")}
-                    fontSize={45}
-                  ></MdDownload>
-                  <p
-                    className={`text-2xl ml-2 ${selectThemeClass(
-                      "text-black",
-                      "text-white"
-                    )}`}
+                  <button
+                    onClick={() => {
+                      
+                    }}
+                    className="flex justify-between items-center w-full text-left"
                   >
-                    Solicitar informacion
-                  </p>
-                </button>
-              </div>
-              )
-            })}
+                    <span
+                      className={`text-md font-bold ${
+                        dispositivo.data.info.status
+                          ? "text-green-400"
+                          : "text-red-400"
+                      }`}
+                    >{`Placa ${dispositivo.id}`}</span>
+                    {dispositivo.data.info.status &&
+                      (openDispositivo ? (
+                        <MdArrowCircleUp
+                          fill={selectThemeClass("#000", "#fff")}
+                          size={30}
+                        ></MdArrowCircleUp>
+                      ) : (
+                        <MdArrowCircleDown
+                          fill={selectThemeClass("#000", "#fff")}
+                          size={30}
+                        ></MdArrowCircleDown>
+                      ))}
+                  </button>
+                  {selectedDispositivo?.id == dispositivo.id &&
+                    openDispositivo &&
+                    dispositivo.data && (
+                      <div className="flex flex-col mt-4">
+                        <div className="flex flex-col items-center align-center justify-center my-2">
+                          <p
+                            className={`${selectThemeClass(
+                              "text-black",
+                              "text-white"
+                            )} text-md font-bold text-center`}
+                          >
+                            {dispositivo.data.info.lastConnectionTime && (
+                              <span>
+                                Ultima conexion:{" "}
+                                {new Date(
+                                  dispositivo.data.info.lastConnectionTime
+                                ).toLocaleTimeString("es-ES", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  second: "2-digit",
+                                  hour12: false, // 24-hour format
+                                })}
+                                {", "}
+                                {new Date(
+                                  dispositivo.data.info.lastConnectionTime
+                                ).toLocaleString("es-ES", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                })}
+                              </span>
+                            )}
+                          </p>{" "}
+                        </div>
+                        <div className="flex flex-col items-center align-center justify-center my-2">
+                          {dispositivo.data.info.apMode ? (
+                            <p
+                              className={`${selectThemeClass(
+                                "text-black",
+                                "text-white"
+                              )} text-xl font-bold text-center`}
+                            >
+                              AP creado: {dispositivo.data.info.ssid}
+                            </p>
+                          ) : (
+                            <p
+                              className={`${selectThemeClass(
+                                "text-black",
+                                "text-white"
+                              )} text-xl font-bold text-center`}
+                            >
+                              Conectado a la red: {dispositivo.data.info.ssid}
+                            </p>
+                          )}
+                          <p
+                            className={`${selectThemeClass(
+                              "text-black",
+                              "text-white"
+                            )} text-md font-bold text-center`}
+                          >
+                            IP local: {dispositivo.data.info.ip}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-center align-center justify-center my-2">
+                          <p
+                            className={`${selectThemeClass(
+                              "text-black",
+                              "text-white"
+                            )} text-xl font-bold text-center`}
+                          >
+                            Ubicado en: {dispositivo.data.info.salaName}
+                          </p>
+                          <p
+                            className={`${selectThemeClass(
+                              "text-black",
+                              "text-white"
+                            )} text-md font-bold text-center`}
+                          >
+                            Con firmware: {dispositivo.data.info.firmware}
+                          </p>
+                          <button
+                            onClick={() => {
+                              
+                            }}
+                            className={`${selectThemeClass(
+                              "bg-sky-400 text-black",
+                              "bg-sky-600 text-white"
+                            )} text-md mt-4 font-bold rounded-xl p-2 px-6 text-center flex justify-center items-center`}
+                          >
+                            Test button
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                </div>
+              ))}
           </div>
-        }
-        {systemInfo &&
-          <div className="flex flex-col text-center my-4">
-            <h1 className="text-4xl font-bold">
-              {`Placa seleccionada ${systemInfo?.chipId}`}
-            </h1>
-            {systemInfo && <div className="flex flex-col my-3">
-              <p className="text-xl">Chip ID: {systemInfo?.chipId}</p>
-              <p className="text-xl">Firmware: {systemInfo?.firmware}</p>
-              <p className="text-xl">ESP Time: {systemInfo?.espTime}</p>
-            </div>}
-          </div>
-        }
+        </div>}
       </div>
     </div>
   );

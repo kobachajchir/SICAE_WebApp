@@ -23,7 +23,7 @@ function GoToButton({
   return (
     <button
       onClick={fnGoTo}
-      className={`flex ${classnamesContainer} items-center justify-center bg-gray-100 h-min rounded-xl p-2`}
+      className={`flex items-center justify-center bg-gray-100 h-min ${classnamesContainer} `}
     >
             {icon}
       <p className={classnames}> {goToSectionTitle}</p>
