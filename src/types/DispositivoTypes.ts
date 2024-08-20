@@ -16,6 +16,7 @@ export interface DispositivoInfo {
 }
 
 export interface DeviceDataEntry {
+  currentConsumed: number;
   deviceType: string;
   icon: string;
   irData: IRData;

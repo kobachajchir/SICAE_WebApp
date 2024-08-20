@@ -27,6 +27,12 @@ import {
   MdSupervisedUserCircle,
   MdAccountCircle,
   MdArrowBack,
+  MdSettingsRemote,
+  MdSignalCellular4Bar,
+  MdSignalCellular3Bar,
+  MdSignalCellular2Bar,
+  MdSignalCellular1Bar,
+  MdSignalCellular0Bar,
 } from "react-icons/md";
 import { fetchConnectionInfo, updateConnectionData } from "../tools/api";
 import { useUser } from "../hooks/UserContext";
@@ -49,7 +55,7 @@ function Home() {
   const { currentUser, logout } = useUser();
   const { dispositivos, setDispositivos } = useDispositivos();
   const [showDispositivos, setShowDispositivos] = useState<boolean>(false);
-  const [openDispositivo, setOpenDispositivo] = useState<false>(false);
+  const [openDispositivo, setOpenDispositivo] = useState<boolean>(false);
   const [selectedDispositivo, setSelectedDispositivo] =
     useState<Dispositivo | null>(null);
 
@@ -59,24 +65,22 @@ function Home() {
   };
 
   const handleClick = useCallback(
-    async (
-      device: DeviceDataEntry,
-      dispositivoId: string,
-    ) => {
+    async (device: DeviceDataEntry, dispositivoId: string) => {
       const updatedState = !device.status;
 
-      // Reference to the specific device state in Firebase
-      const deviceStateRef = ref(
-        database,
-        `dispositivos/${dispositivoId}/data/devices/${device.id}/status`
-      );
+      // Construct the path for the update request
+      const newDataRef = ref(database, `events/${dispositivoId}/newData`);
 
       try {
-        // Update the state in Firebase
-        await set(deviceStateRef, updatedState);
-        console.log("Status updated successfully");
+        // Write the update command to the `newData` section in Firebase
+        await set(newDataRef, {
+          section: `set/devices/${device.id}/status/${updatedState}`, // The URL with the updated state
+          status: true, // Indicates that there is new data to be processed
+        });
 
-        // Explicitly refetch the updated data
+        console.log("Change request written to newData section");
+
+        // Optionally refetch the data to ensure UI stays in sync
         const dispositivosRef = ref(database, "dispositivos");
         const snapshot = await get(dispositivosRef);
         const data = snapshot.val();
@@ -88,7 +92,10 @@ function Home() {
           setDispositivos(dispositivosArray); // This will trigger a re-render
         }
       } catch (error) {
-        console.error("Error updating status:", error);
+        console.error(
+          "Error writing change request to newData section:",
+          error
+        );
       }
     },
     [setDispositivos]
@@ -144,53 +151,118 @@ function Home() {
     logout();
   }
 
-function renderDeviceCard(device:DeviceDataEntry, index:number) {
-  return (
-  <div
-    key={index} // Use index as key or a unique identifier if available
-    className={`${selectThemeClass(
-      "bg-gray-300",
-      "bg-gray-800"
-    )} text-md font-bold text-center flex flex-col p-4 m-2 rounded-lg items-center align-center justify-center`}
-    onClick={() => {
-      console.log(device);
-      handleClick(device, selectedDispositivo.id, index);
-    }}
-  >
-    {device.deviceType === "ir" && (
-      <MdContactless
-      fill={device.status ? "#04F804" : selectThemeClass("#000", "#fff")}
-      size={50}
-        className="mb-2"
-      />
-    )}
-    {device.deviceType === "relay" && (
-      <MdElectricalServices
-      fill={device.status ? "#04F804" : selectThemeClass("#000", "#fff")}
-        size={50}
-        className="mb-2"
-      />
-    )}
-    <p>
-      <strong>ID:</strong> {device.id}
-    </p>
-    <p>
-      <strong>Nombre:</strong> {device.name}
-    </p>
-    <p>
-      <strong>Estado:</strong> {device.status ? "On" : "Off"}
-    </p>
-    {device.status ? (
-      <MdToggleOn fill={"#04F804"} size={30} />
-    ) : (
-      <MdToggleOff
-        fill={selectThemeClass("#000", "#fff")}
-        size={30}
-      />
-    )}
-  </div>
-  )
-}
+  function signalStrengthIcon(signal) {
+    if (signal >= -50) {
+      return (
+        <MdSignalCellular4Bar
+          className="ml-2"
+          size={22}
+          fill={`${selectThemeClass("#000", "#fff")}`}
+        />
+      );
+    } else if (signal >= -60) {
+      return (
+        <MdSignalCellular3Bar
+          className="ml-2"
+          size={22}
+          fill={`${selectThemeClass("#000", "#fff")}`}
+        />
+      );
+    } else if (signal >= -70) {
+      return (
+        <MdSignalCellular2Bar
+          className="ml-2"
+          size={22}
+          fill={`${selectThemeClass("#000", "#fff")}`}
+        />
+      );
+    } else if (signal >= -80) {
+      return (
+        <MdSignalCellular1Bar
+          className="ml-2"
+          size={22}
+          fill={`${selectThemeClass("#000", "#fff")}`}
+        />
+      );
+    } else {
+      return (
+        <MdSignalCellular0Bar
+          className="ml-2"
+          size={22}
+          fill={`${selectThemeClass("#000", "#fff")}`}
+        />
+      );
+    }
+  }
+
+  function renderDeviceCard(device: DeviceDataEntry, index: number) {
+    return (
+      <div
+        key={index} // Use index as key or a unique identifier if available
+        className={`${selectThemeClass(
+          "bg-gray-300",
+          "bg-gray-800"
+        )} text-md font-bold text-center flex flex-col p-4 m-2 w-full rounded-lg items-center align-center justify-center`}
+        onClick={() => {
+          console.log(device);
+          handleClick(device, selectedDispositivo.id, index);
+        }}
+      >
+        {device.deviceType === "ir" && (
+          <MdContactless
+            fill={selectThemeClass("#000", "#fff")}
+            size={50}
+            className="mb-2"
+          />
+        )}
+        {device.deviceType === "relay" && (
+          <>
+            <MdElectricalServices
+              fill={
+                device.status ? "#04F804" : selectThemeClass("#000", "#fff")
+              }
+              size={50}
+              className="mb-2"
+            />
+            {device.status && (
+              <p
+                className={`${selectThemeClass(
+                  "text-black",
+                  "text-white"
+                )} text-sm mb-2 -mt-3`}
+              >
+                Corriente: {Math.abs(device.currentConsumed)}A
+              </p>
+            )}
+          </>
+        )}
+        <p>
+          <strong>ID:</strong> {device.id}
+        </p>
+        <p>
+          <strong>Nombre:</strong> {device.name}
+        </p>
+        {device.deviceType == "relay" && (
+          <p>
+            <strong>Estado:</strong> {device.status ? "ON" : "OFF"}
+          </p>
+        )}
+        {device.deviceType == "relay" ? (
+          device.status ? (
+            <MdToggleOn fill={"#04F804"} size={30} />
+          ) : (
+            <MdToggleOff fill={selectThemeClass("#000", "#fff")} size={30} />
+          )
+        ) : (
+          <MdSettingsRemote
+            className="mt-2"
+            fill={selectThemeClass("#000", "#fff")}
+            size={30}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -203,7 +275,7 @@ function renderDeviceCard(device:DeviceDataEntry, index:number) {
         className={`${selectThemeClass(
           "text-black",
           "text-white"
-        )} text-3xl font-bold h-1/6 text-center w-full flex flex-row justify-center items-center`}
+        )} text-3xl font-bold text-center w-full flex flex-row justify-center items-center p-6`}
         style={{
           position: "relative",
         }}
@@ -237,17 +309,17 @@ function renderDeviceCard(device:DeviceDataEntry, index:number) {
             "bg-gray-800 text-white"
           )} `}
         >
-          <MdAccountCircle size={35} fill={selectThemeClass("#000", "#fff")}></MdAccountCircle>
-          <p 
-          className={`text-xl font-bold text-center ml-1`}
-          >
-            
+          <MdAccountCircle
+            size={35}
+            fill={selectThemeClass("#000", "#fff")}
+          ></MdAccountCircle>
+          <p className={`text-xl font-bold text-center ml-1`}>
             {currentUser?.userEmail}
           </p>
         </div>
       </div>
       <div
-        className={`flex flex-col w-full h-5/6 ${selectThemeClass(
+        className={`flex flex-col w-full ${selectThemeClass(
           "bg-gray-200 text-black",
           "bg-gray-800 text-white"
         )} justify-center items-center`}
@@ -259,7 +331,7 @@ function renderDeviceCard(device:DeviceDataEntry, index:number) {
             className={`flex w-5/6 rounded-2xl flex-col py-4 align-center justify-center items-center ${selectThemeClass(
               "bg-gray-100",
               "bg-gray-900"
-            )}`}
+            )} my-5`}
           >
             {dispositivos.length > 0 &&
               dispositivos.map((dispositivo) => (
@@ -352,14 +424,19 @@ function renderDeviceCard(device:DeviceDataEntry, index:number) {
                               AP creado: {dispositivo.data.info.ssid}
                             </p>
                           ) : (
-                            <p
-                              className={`${selectThemeClass(
-                                "text-black",
-                                "text-white"
-                              )} text-xl font-bold text-center`}
-                            >
-                              Conectado a la red: {dispositivo.data.info.ssid}
-                            </p>
+                            <div className="flex flex-row items-center align-center justify-center">
+                              <p
+                                className={`${selectThemeClass(
+                                  "text-black",
+                                  "text-white"
+                                )} text-xl font-bold text-center flex flex-row`}
+                              >
+                                Conectado a la red: {dispositivo.data.info.ssid}
+                              </p>
+                              {signalStrengthIcon(
+                                Math.abs(Number(dispositivo.data.info.connDBI))
+                              )}
+                            </div>
                           )}
                           <p
                             className={`${selectThemeClass(
@@ -414,17 +491,16 @@ function renderDeviceCard(device:DeviceDataEntry, index:number) {
               )}`}
             >
               <button
-              onClick={() => {
-                setShowDispositivos(false)
-              }}
-              className="flex absolute right-5 top-5"
-            >
-              <MdClose
-              size={25}
-              fill={selectThemeClass("#000", "#fff")}
+                onClick={() => {
+                  setShowDispositivos(false);
+                }}
+                className="flex absolute right-5 top-5"
               >
-              </MdClose>
-            </button>
+                <MdClose
+                  size={25}
+                  fill={selectThemeClass("#000", "#fff")}
+                ></MdClose>
+              </button>
               <div className="flex flex-col items-center align-center justify-center my-2">
                 <p
                   className={`${selectThemeClass(
@@ -443,41 +519,46 @@ function renderDeviceCard(device:DeviceDataEntry, index:number) {
                   </a>
                 </p>
               </div>
-              <div className="flex flex-row my-2 w-full justify-evenly ">
+              <div className="flex flex-row my-2 w-full justify-evenly">
                 <div className="flex flex-col items-center align-center justify-center w-1/2">
-                <p
-                  className={`${selectThemeClass(
-                    "text-black",
-                    "text-white"
-                  )} text-lg font-bold text-center w-full`}
-                >
-                  Controlados por IR
-                </p>
-                <div className="flex flex-row items-center align-center justify-center w-1/2">
-                {selectedDispositivo?.data.devices.filter((el)=>el.deviceType === "ir").map(
-                  (device: DeviceDataEntry, index: number) => renderDeviceCard(device, index))}
-                </div>
+                  <p
+                    className={`${selectThemeClass(
+                      "text-black",
+                      "text-white"
+                    )} text-lg font-bold text-center w-full`}
+                  >
+                    Controlados por IR
+                  </p>
+                  <div className="flex flex-row items-center align-center justify-center">
+                    {selectedDispositivo?.data.devices
+                      .filter((el) => el.deviceType === "ir")
+                      .map((device: DeviceDataEntry, index: number) =>
+                        renderDeviceCard(device, index)
+                      )}
+                  </div>
                 </div>
                 <div className="flex flex-col items-center align-center justify-center w-1/2">
-                <p
-                  className={`${selectThemeClass(
-                    "text-black",
-                    "text-white"
-                  )} text-lg font-bold text-center w-full`}
-                >
-                  Controlados por Rele
-                </p>
-                <div className="flex flex-row items-center align-center justify-center">
-                {selectedDispositivo?.data.devices.filter((el)=>el.deviceType === "relay").map(
-                  (device: DeviceDataEntry, index: number) => renderDeviceCard(device, index))
-                }
+                  <p
+                    className={`${selectThemeClass(
+                      "text-black",
+                      "text-white"
+                    )} text-lg font-bold text-center w-full`}
+                  >
+                    Controlados por Rele
+                  </p>
+                  <div className="flex flex-row items-center align-center justify-center">
+                    {selectedDispositivo?.data.devices
+                      .filter((el) => el.deviceType === "relay")
+                      .map((device: DeviceDataEntry, index: number) =>
+                        renderDeviceCard(device, index)
+                      )}
                   </div>
                 </div>
               </div>
             </div>
           )}
         </div>
-        <div className="h-1/6 flex items-center justify-center align-center">
+        <div className="h-1/6 flex items-center justify-center align-center my-5">
           <GoToButton
             fnGoTo={handleGoToSettings}
             goToSectionTitle="Configuracion"
@@ -491,7 +572,7 @@ function renderDeviceCard(device:DeviceDataEntry, index:number) {
             classnamesContainer={`${selectThemeClass(
               "bg-gray-100 text-black",
               "bg-gray-900 text-white"
-            )} p-4 flex-row rounded-full`}
+            )} p-4 flex-row rounded-full align-center items-center`}
           ></GoToButton>
         </div>
       </div>
