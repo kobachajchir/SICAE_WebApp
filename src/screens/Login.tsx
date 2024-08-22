@@ -9,17 +9,19 @@ function Login() {
   const navigate = useNavigate();
   //@ts-ignore
   const { currentUser, login, logout } = useUser();
-  const [email, setEmail] = useState("")
-  const [pass, setPass] = useState("")
-  const [error, setError] = useState(false)
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [error, setError] = useState(false);
 
   function handleLogin() {
-    login(email, pass).then(() => {
+    login(email, pass)
+      .then(() => {
         navigate("/home");
-    }).catch(error => {
-      console.log("Login error:", error);
-      setError(true)
-    });
+      })
+      .catch((error) => {
+        console.log("Login error:", error);
+        setError(true);
+      });
   }
 
   return (
@@ -65,96 +67,99 @@ function Login() {
               "bg-gray-900"
             )}`}
           >
-              <MdAccountCircle
-                fill={selectThemeClass("#000", "#fff")}
-                size={120}
-                style={{margin: 30}}
-                ></MdAccountCircle>
-              <p
+            <MdAccountCircle
+              fill={selectThemeClass("#000", "#fff")}
+              size={120}
+              style={{ margin: 30 }}
+            ></MdAccountCircle>
+            <p
               className={`${selectThemeClass(
                 "text-black",
                 "text-white"
               )} text-2xl font-bold text-center -mt-10 mb-4`}
-              >
+            >
               Inicie sesion para entrar al sistema
-              </p>
-              <div className="flex flex-col items-center justify-center my-2">
-                <div className="flex flex-row items-center justify-center">
-                  <label
+            </p>
+            <div className="flex flex-col items-center justify-center my-2">
+              <div className="flex flex-row items-center justify-center my-1">
+                <label
                   className={`${selectThemeClass(
                     "text-black",
                     "text-white"
                   )} text-2xl font-bold text-center`}
-                  >
-                  Email: 
+                >
+                  Email:
                 </label>
                 <input
                   className={`${selectThemeClass(
-                    "bg-gray-300 text-black",
-                    "bg-gray-700 text-white"
-                  )} rounded-xl ml-2 text-center`}
+                    "bg-gray-400 text-black",
+                    "bg-gray-600 text-white"
+                  )} p-2 px-4 rounded-full ml-2 w-3/4`}
                   type="text"
                   name="wifiSsid"
                   id="wifiSsid"
                   onChange={(e) => {
-                    setEmail(e.currentTarget.value)
+                    setEmail(e.currentTarget.value);
                   }}
                   onFocus={() => {
                     if (error) {
-                      setError(false)
+                      setError(false);
                     }
                   }}
                 />
-                </div>
-                <div className="flex flex-row items-center justify-center">
-                  <label
-                    className={`${selectThemeClass(
-                      "text-black",
-                      "text-white"
-                    )} text-2xl font-bold text-center`}
-                    >
-                    Contraseña: 
+              </div>
+              <div className="flex flex-row items-center justify-center my-1">
+                <label
+                  className={`${selectThemeClass(
+                    "text-black",
+                    "text-white"
+                  )} text-2xl font-bold text-center`}
+                >
+                  Contraseña:
                 </label>
                 <input
                   className={`${selectThemeClass(
-                    "bg-gray-300 text-black",
-                    "bg-gray-700 text-white"
-                  )} rounded-xl ml-2 text-center`}
+                    "bg-gray-400 text-black",
+                    "bg-gray-600 text-white"
+                  )} p-2 px-4 rounded-full ml-2 w-3/4`}
                   type="password"
                   name="userPassword"
                   id="userPassword"
                   onChange={(e) => {
-                    setPass(e.currentTarget.value)
+                    setPass(e.currentTarget.value);
                   }}
                   onFocus={() => {
                     if (error) {
-                      setError(false)
+                      setError(false);
                     }
                   }}
                 />
-                </div>
+              </div>
             </div>
-              <div className="flex flex-row justify-around items-center mb-10 mt-5">
-                <button
-                  onClick={handleLogin}
-                  className={`flex flex-row items-center justify-center bg-blue-500 h-min rounded-full p-2 mx-2`}
+            <div className="flex flex-row justify-around items-center mb-10 mt-5">
+              <button
+                onClick={handleLogin}
+                className={`${selectThemeClass(
+                  "bg-lime-300 text-black",
+                  "bg-lime-600 text-white"
+                )} p-2 px-4 rounded-full flex flex-row align-center items-center mx-1`}
               >
                 <p
-                    className={`${selectThemeClass(
-                      "text-black",
-                      "text-white"
-                    )} text-lg font-bold text-center mr-2`}
-                    >
-                    Ingresar
+                  className={`${selectThemeClass(
+                    "text-black",
+                    "text-white"
+                  )} text-lg font-bold text-center mr-2`}
+                >
+                  Ingresar
                 </p>
-                  <MdLogin
-                    fill={selectThemeClass("#000", "#fff")}
-                    fontSize={35}
-                    ></MdLogin>
-                </button>
-              </div>
+                <MdLogin
+                  fill={selectThemeClass("#000", "#fff")}
+                  fontSize={35}
+                ></MdLogin>
+              </button>
+            </div>
           </div>
-          {error &&
+          {error && (
             <div className="h-auto w-auto flex-col items-center justify-center align-center bg-red-500 my-4 rounded-xl px-4 py-2">
               <MdWarning
                 fill={selectThemeClass("#000", "#fff")}
@@ -169,7 +174,7 @@ function Login() {
                 Error de credenciales
               </p>
             </div>
-          }
+          )}
         </div>
       </div>
     </div>

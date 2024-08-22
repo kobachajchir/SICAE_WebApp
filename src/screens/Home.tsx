@@ -143,6 +143,34 @@ function Home() {
     }
   }, [currentUser]);
 
+  useEffect(() => {
+    const checkAllConnections = () => {
+      dispositivos.forEach((dispositivo) => {
+        const lastConnectionTime = dispositivo?.data?.info?.lastConnectionTime;
+        const currentTime = Date.now();
+
+        if (lastConnectionTime) {
+          const elapsedTime =
+            (currentTime - new Date(lastConnectionTime).getTime()) / 1000;
+          if (elapsedTime > 90) {
+            // Update the status in the database
+            const statusRef = ref(
+              database,
+              `dispositivos/${dispositivo.id}/data/info/status`
+            );
+            set(statusRef, false).catch((error) => {
+              console.error("Error updating status in the database:", error);
+            });
+          }
+        }
+      });
+    };
+
+    const intervalId = setInterval(checkAllConnections, 10000); // Check every 10 seconds
+
+    return () => clearInterval(intervalId); // Clean up the interval on component unmount
+  }, [dispositivos]);
+
   function handleGoToSettings() {
     navigate("/settings");
   }
@@ -202,7 +230,7 @@ function Home() {
         className={`${selectThemeClass(
           "bg-gray-300",
           "bg-gray-800"
-        )} text-md font-bold text-center flex flex-col p-4 m-2 w-full rounded-lg items-center align-center justify-center`}
+        )} text-md font-bold text-center flex flex-col p-4 m-2 w-full rounded-lg items-center align-center justify-center transition-colors ease-in duration-150 active:bg-red-500`}
         onClick={() => {
           console.log(device);
           handleClick(device, selectedDispositivo.id, index);
